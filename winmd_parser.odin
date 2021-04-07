@@ -281,6 +281,10 @@ Database :: struct {
 	generic_param:            Table,
 	method_spec:              Table,
 	generic_param_constraint: Table,
+
+
+	typedef_map_pername: map[string]u32
+
 }
 
 Table_Column :: struct {
@@ -834,6 +838,7 @@ type_sig_to_odin :: proc(t: ^Type_Sig) -> string {
 
 element_type_to_odin :: proc( et: Element_Type ) -> string {
 	#partial switch et {
+		case .boolean: return "b8";
 		case .i1: return "i8";
 		case .u1: return "u8";
 		case .i2: return "i16";
@@ -846,8 +851,8 @@ element_type_to_odin :: proc( et: Element_Type ) -> string {
 		case .r8: return "f64";
 		case .u: return "size_t";
 		case .i: return "intptr_t";
-		case .valueType: assert(false); return "error";
-		case: return "ERROR :(";
+		case .valueType: assert(false); return "error!";
+		case: assert(false); return "error!";
 	}
 }
 
@@ -1238,13 +1243,9 @@ export_function :: proc(db: ^Database, function_row_idx: u32, func_type: Export_
 find_typedef_from_typeref :: proc( db: ^Database, typeref_row_id: u32) -> (bool,u32) {
 	name, _ := table_get_string( db, &db.type_ref, typeref_row_id, 1 );
 	namespace, _ := table_get_string( db, &db.type_ref, typeref_row_id, 2 );
-	for i in 0..db.type_def.row_count {
-		typedef_row := typedef_row_get(db, i);
-		if strings.compare(typedef_row.name, name)==0 && strings.compare(typedef_row.namespace, namespace)==0 {
-			return true, i;
-		}
-	}
-	return false, 0;
+	fullname := strings.concatenate({namespace, ".", name}, context.temp_allocator);
+	elem, ok := db.typedef_map_pername[fullname];
+	return ok, elem;
 }
 
 find_interface_impl :: proc(db: ^Database, class: u32) -> (bool,Type_Def_Or_Ref) {
@@ -1391,12 +1392,17 @@ print_tab :: proc(count: int) {
 	}
 }
 
+export_variable_uid := 0;
 export_variable_name :: proc(name: string) -> string {
 	switch(name) {
 		case "in": return "in_";
 		case "defer": return "defer_";
 		case "proc": return "proc_";
 		case "context": return "context_";
+		case "_bitfield": 
+			export_variable_uid += 1;
+			return fmt.aprintf("_bitfield_%v", export_variable_uid);
+
 		case: return name;
 	}
 }
@@ -1427,7 +1433,7 @@ export_struct_members :: proc(db: ^Database, tab: int, struct_idx: u32) -> u32 {
 			}
 			print_tab(tab);
 			if is_anonymous {
-				printf("using _%v_%v: struct ", member.name, tab);
+				printf("using _%v_%v: struct ", member.name, union_idx+struct_idx);
 			} else {
 				printf("_%v: struct ", member.name);
 			}
@@ -1466,10 +1472,37 @@ export_struct :: proc(db: ^Database, struct_idx: u32) {
 }
 
 DEBUG_OUTPUT :: false;
-println :: inline proc(args: ..any) -> int { return fmt.println(..args); }
-printf  :: inline proc(format: string, args: ..any) -> int { return fmt.printf(format, ..args); }
+
+
+USE_OUTPUT_BUFFER :: true;
+
+when USE_OUTPUT_BUFFER {
+	OUTPUT_BUFFER_SIZE :: 16*1024;
+	output_buffer_data : [OUTPUT_BUFFER_SIZE]byte;
+	output_buffer_cursor := 0;
+
+	output_buffer_flush :: proc() {
+		to_flush := string(output_buffer_data[0:output_buffer_cursor]);
+		fmt.print(to_flush);
+		output_buffer_cursor = 0;
+	}
+	print_to_buffer :: proc(s: string) {
+		copy(output_buffer_data[output_buffer_cursor:], s);
+		output_buffer_cursor += len(s);
+		if output_buffer_cursor>(OUTPUT_BUFFER_SIZE/2) {
+			output_buffer_flush();
+		}
+	}
+	println :: inline proc(args: ..any) { print_to_buffer(fmt.tprintln(..args)); }
+	printf  :: inline proc(format: string, args: ..any) { print_to_buffer(fmt.tprintf(format,..args)); }
+}
+else {
+	println :: inline proc(args: ..any) -> int { return fmt.println(..args); }
+	printf  :: inline proc(format: string, args: ..any) -> int { return fmt.printf(format, ..args); }
+}
+
 //println :: proc(args: ..any) -> int { return 0; }
-//printf  :: proc(fmt: string, args: ..any) -> int { return 0; }
+//printf  :: proc(format: string, args: ..any) -> int { return 0; }
 
 main :: proc() {
 
@@ -1491,7 +1524,7 @@ main :: proc() {
 		}
 	}
 
-	target_namespace := "Windows.Win32.Direct3DHlsl";
+	target_namespace := "Windows.Win32.Direct3D11";
 	if len(os.args)>1 {
 		target_namespace = os.args[1];
 	}
@@ -1540,6 +1573,10 @@ main :: proc() {
 
 			// filter namespace
 			typedef_row := typedef_row_get(db, row_idx);
+
+			fullname := strings.concatenate( {typedef_row.namespace, ".", typedef_row.name});
+			db.typedef_map_pername[fullname] = row_idx;
+
 			if strings.compare(typedef_row.namespace, target_namespace) !=0 {
 				continue;
 			}
@@ -1565,14 +1602,12 @@ main :: proc() {
 			}
 		}
 	}
-
-	if len(enums)>0 {
+	if len(globals)>0 {
 		println("\n// Globals");
 		for idx in globals {
 			export_typedef_fields(db, idx, .Global);
 		}
 	}
-
 	if len(enums)>0 {
 		println("\n// Enums");
 		for idx in enums {
@@ -1612,5 +1647,8 @@ main :: proc() {
 		if skip_global_functions {
 			println("*/");
 		}
+	}
+	when USE_OUTPUT_BUFFER {
+		output_buffer_flush();
 	}
 }
