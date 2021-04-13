@@ -27,6 +27,7 @@ HINSTANCE :: HANDLE;
 Point :: win32.Point;
 POINT :: Point;
 LUID :: _LUID;
+wstring :: distinct ^u16;
 //HICON     :: distinct HANDLE;
 //HCURSOR   :: distinct HANDLE;
 //HBRUSH    :: distinct HANDLE;

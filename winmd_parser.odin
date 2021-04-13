@@ -1665,7 +1665,8 @@ main :: proc() {
 	if len(os.args) > 2 {
 		lib_name = os.args[2];
 	}
-	package_name := "sys_windows";
+	//package_name := "sys_windows";
+	package_name := "win32_winmd";
 
 	assert(size_of(b32) == size_of(win32.BOOL));
 
