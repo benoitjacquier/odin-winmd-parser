@@ -185,8 +185,8 @@ to_string :: proc(s: []byte) -> string {
 }
 
 read_compressed_cond :: proc($T: typeid, cursor: ^[]byte, cond: T) -> bool {
-	val, length := peek_compressed( T, cursor^ );
-	if val==cond {
+	val, length := peek_compressed(T, cursor^);
+	if val == cond {
 		cursor^ = cursor[length:];
 		return true;
 	}
@@ -197,7 +197,7 @@ peek_compressed :: proc($T: typeid, cursor: []byte) -> (T, u32) {
 	data := uintptr(raw_data(cursor));
 	value: u32;
 	length: u32;
-    switch x := (^u8)(data)^; {
+	switch x := (^u8)(data)^; {
 	case x & 0x80 == 0x00:
 		length = 1;
 		value = u32(x);
@@ -218,11 +218,11 @@ peek_compressed :: proc($T: typeid, cursor: []byte) -> (T, u32) {
 	case:
 		panic("invalid compressed integer in blob");
 	}
-	return cast(T)value, length;
+	return T(value), length;
 }
 
 read_compressed :: proc($T: typeid, cursor: ^[]byte) -> T {
-	val, length := peek_compressed( T, cursor^ );
+	val, length := peek_compressed(T, cursor^);
 	cursor^ = cursor[length:];
 	return val;
 
@@ -283,7 +283,7 @@ Database :: struct {
 	generic_param_constraint: Table,
 
 
-	typedef_map_pername: map[string]u32
+	typedef_map_pername: map[string]u32,
 
 }
 
@@ -325,9 +325,9 @@ table_index_size :: proc(t: Table) -> u8 {
 }
 
 table_get_value :: proc (t: ^Table, $T: typeid, row, column: u32) -> T {
-	#assert(size_of(T)==4 || size_of(T)==2);
+	#assert(size_of(T) == 4 || size_of(T) == 2);
 	column_table := &t.columns[column];
-	assert(column_table.size<=size_of(T) && row<=t.row_count);
+	assert(column_table.size <= size_of(T) && row <= t.row_count);
 
 	ptr := t.ptr + uintptr(row*t.row_size + column_table.offset);
 	switch column_table.size {
@@ -491,14 +491,14 @@ parse_database :: proc(db: ^Database) -> bool {
 		switch name {
 		case "#Strings":
 			db.strings = db.data[table_offset:][:stream.size];
-			//printf("string table offset %v\n", table_offset );
+			//printf("string table offset %v\n", table_offset);
 		case "#Blob":
 			db.blobs   = db.data[table_offset:][:stream.size];
 		case "#GUID":
 			db.guids   = db.data[table_offset:][:stream.size];
 		case "#~":
 			db.tables  = db.data[table_offset:][:stream.size];
-			//printf("tables offset %v\n", table_offset );
+			//printf("tables offset %v\n", table_offset);
 		case "#US":
 			// ignore
 		case:
@@ -515,13 +515,13 @@ parse_database :: proc(db: ^Database) -> bool {
 		}
 	}
 
-    start := 0;
-    for r, idx in db.strings {
-        if r==0 && idx>start {
-            str : string = cast(string)db.strings[start:idx];
-            start = idx+1;
-        }
-    }
+	start := 0;
+	for r, idx in db.strings {
+		if r == 0 && idx>start {
+			str := string(db.strings[start:idx]);
+			start = idx+1;
+		}
+	}
 
 	heap_sizes := (^bit_set[0..<8; u8])(&db.tables[6])^;
 	string_index_size: u8 = 4 if (0 in heap_sizes) else 2;
@@ -653,96 +653,96 @@ parse_database :: proc(db: ^Database) -> bool {
 
 Base_Type :: struct {
 	name: string,
-	namespace: string
+	namespace: string,
 }
 
 
 Element_Type :: enum u8 {
-    end             = 0x00, 
-    void_           = 0x01,
-    boolean         = 0x02,
-    char_           = 0x03,
-    i1              = 0x04,
-    u1              = 0x05,
-    i2              = 0x06,
-    u2              = 0x07,
-    i4              = 0x08,
-    u4              = 0x09,
-    i8              = 0x0a,
-    u8              = 0x0b,
-    r4              = 0x0c,
-    r8              = 0x0d,
-    string          = 0x0e,
-    ptr             = 0x0f, 
-    byRef           = 0x10, 
-    valueType       = 0x11, 
-    class_          = 0x12, 
-    var             = 0x13, 
-    array           = 0x14,
-    genericInst     = 0x15,
-    typedByRef      = 0x16,
-    i               = 0x18, 
-    u               = 0x19, 
-    fnPtr           = 0x1b, 
-    object          = 0x1c, 
-    szArray         = 0x1d,
-    mVar            = 0x1e, 
-    cModReqd        = 0x1f, 
-    cModOpt         = 0x20, 
-    internal        = 0x21,
-    modifier        = 0x40, 
-    sentinel        = 0x41, 
-    pinned          = 0x45,
-    type            = 0x50, 
-    taggedObject    = 0x51, 
-    field           = 0x53, 
-    property        = 0x54, 
-    enum_           = 0x55, 
+	end             = 0x00,
+	void_           = 0x01,
+	boolean         = 0x02,
+	char_           = 0x03,
+	i1              = 0x04,
+	u1              = 0x05,
+	i2              = 0x06,
+	u2              = 0x07,
+	i4              = 0x08,
+	u4              = 0x09,
+	i8              = 0x0a,
+	u8              = 0x0b,
+	r4              = 0x0c,
+	r8              = 0x0d,
+	string          = 0x0e,
+	ptr             = 0x0f,
+	byRef           = 0x10,
+	valueType       = 0x11,
+	class_          = 0x12,
+	var             = 0x13,
+	array           = 0x14,
+	genericInst     = 0x15,
+	typedByRef      = 0x16,
+	i               = 0x18,
+	u               = 0x19,
+	fnPtr           = 0x1b,
+	object          = 0x1c,
+	szArray         = 0x1d,
+	mVar            = 0x1e,
+	cModReqd        = 0x1f,
+	cModOpt         = 0x20,
+	internal        = 0x21,
+	modifier        = 0x40,
+	sentinel        = 0x41,
+	pinned          = 0x45,
+	type            = 0x50,
+	taggedObject    = 0x51,
+	field           = 0x53,
+	property        = 0x54,
+	enum_           = 0x55,
 }
 
 Calling_Convention :: enum u8 {
-    Default         = 0x00,
-    Var_Arg         = 0x05,
-    Field           = 0x06,
-    Local_Sig     	= 0x07,
-    Property        = 0x08,
-    Generic_Inst    = 0x10,
-    Mask            = 0x0f,
-    HasThis         = 0x20,
-    ExplicitThis    = 0x40,
-    Generic         = 0x10,
+	Default         = 0x00,
+	Var_Arg         = 0x05,
+	Field           = 0x06,
+	Local_Sig       = 0x07,
+	Property        = 0x08,
+	Generic_Inst    = 0x10,
+	Mask            = 0x0f,
+	HasThis         = 0x20,
+	ExplicitThis    = 0x40,
+	Generic         = 0x10,
 }
 
 // 5 bits.
 Has_Custom_Attribute :: enum u8 {
-    methodDef,
-    field,
-    typeRef,
-    typeDef,
-    param,
-    interfaceImpl,
-    memberRef,
-    module_,
-    permission,
-    property,
-    event,
-    standAloneSig,
-    moduleRef,
-    typeSpec,
-    assembly,
-    assemblyRef,
-    file,
-    exportedType,
-    manifestResource,
-    genericParam,
-    genericParamConstraint,
-    methodSpec,
+	methodDef,
+	field,
+	typeRef,
+	typeDef,
+	param,
+	interfaceImpl,
+	memberRef,
+	module,
+	permission,
+	property,
+	event,
+	standAloneSig,
+	moduleRef,
+	typeSpec,
+	assembly,
+	assemblyRef,
+	file,
+	exportedType,
+	manifestResource,
+	genericParam,
+	genericParamConstraint,
+	methodSpec,
 }
 
 Field_Sig :: struct {
 	call_conv: Calling_Convention,
 	custommod_sig: []CustomMod_Sig,
-	type_sig: Type_Sig
+	type_sig: Type_Sig,
 	//call convention
 	//custom mod
 
@@ -756,36 +756,36 @@ Type_Sig :: struct {
 	ptrCount: i32,
 	custommod_sig: []CustomMod_Sig,
 	element_type: Element_Type,
-	value_type: Base_Type
+	value_type: Base_Type,
 }
 
-read_type_sig :: proc( db: ^Database, cursor: ^[]byte ) -> Type_Sig {
+read_type_sig :: proc(db: ^Database, cursor: ^[]byte) -> Type_Sig {
 	res := Type_Sig{};
-	res.isSZArray = read_compressed_cond( Element_Type, cursor, Element_Type.szArray );
-    res.isArray = read_compressed_cond( Element_Type, cursor, Element_Type.array );
+	res.isSZArray = read_compressed_cond(Element_Type, cursor, Element_Type.szArray);
+	res.isArray = read_compressed_cond(Element_Type, cursor, Element_Type.array);
 	// custom mods
 	for {
-		if read_compressed_cond( Element_Type, cursor, Element_Type.ptr ) {
+		if read_compressed_cond(Element_Type, cursor, Element_Type.ptr) {
 			res.ptrCount += 1;
 		} else {
 			break;
 		}
 	}
-	res.custommod_sig = read_custom_mods( cursor );
+	res.custommod_sig = read_custom_mods(cursor);
 	// type
-	res.element_type = read_compressed( Element_Type, cursor );
-	if res.element_type==.valueType {
-		res.value_type = base_type_get( db, read_compressed_type_def_or_ref( cursor ) );
+	res.element_type = read_compressed(Element_Type, cursor);
+	if res.element_type == .valueType {
+		res.value_type = base_type_get(db, read_compressed_type_def_or_ref(cursor));
 	}
-	if res.element_type==.class_ {
-		res.value_type = base_type_get( db, read_compressed_type_def_or_ref( cursor ) );
+	if res.element_type == .class_ {
+		res.value_type = base_type_get(db, read_compressed_type_def_or_ref(cursor));
 	}
 	// array
 	if res.isArray {
 		res.arrayRank = read_compressed(u32, cursor);
 		arraySizes: [dynamic]u32;
 		length := read_compressed(u32, cursor);
-		for i:u32=0; i<length; i+=1 {
+		for i in 0 ..< length {
 			append(&arraySizes, read_compressed(u32, cursor));
 		}
 		res.arraySizes = arraySizes[:];
@@ -807,86 +807,88 @@ base_type_to_odin :: proc(b: ^Base_Type) -> string {
 type_sig_to_odin :: proc(t: ^Type_Sig) -> string {
 	res := "";
 
-	//assert( t.ptrCount<2 );
-	if t.element_type==.void_ {
-		assert( t.ptrCount>=1 );
-		for i : i32 = 0; i < t.ptrCount-1; i += 1 {
-			res = strings.concatenate( {res,"^"} );
+	//assert(t.ptrCount<2);
+	if t.element_type == .void_ {
+		assert(t.ptrCount >= 1);
+		for i: i32 = 0; i < t.ptrCount-1; i += 1 {
+			res = strings.concatenate({res,"^"});
 		}
-		return strings.concatenate( {res,"rawptr"} );
+		return strings.concatenate({res,"rawptr"});
 	}
 
-	for i : i32 = 0; i < t.ptrCount; i += 1 {
-		res = strings.concatenate( {res,"^"} );
+	for i: i32 = 0; i < t.ptrCount; i += 1 {
+		res = strings.concatenate({res,"^"});
 	}
 	if t.isArray {
-		assert( t.arrayRank==1 );
-		res = strings.concatenate( {res, fmt.aprintf("[%d]", t.arraySizes[0] )});
+		assert(t.arrayRank == 1);
+		res = strings.concatenate({res, fmt.aprintf("[%d]", t.arraySizes[0])});
 	}
-	base_type : string;
-	if t.element_type==.valueType {
+	base_type: string;
+	if t.element_type == .valueType {
 		base_type = base_type_to_odin(&t.value_type);
-	} else if t.element_type==.class_ {
+	} else if t.element_type == .class_ {
 		base_type = base_type_to_odin(&t.value_type);
-		base_type = strings.concatenate( {"^",base_type} );
+		base_type = strings.concatenate({"^",base_type});
 	} else {
 		base_type =  element_type_to_odin(t.element_type);
 	}
-	res = strings.concatenate( {res,base_type} );
+	res = strings.concatenate({res,base_type});
 	return res;
 }
 
-element_type_to_odin :: proc( et: Element_Type ) -> string {
+element_type_to_odin :: proc(et: Element_Type) -> string {
 	#partial switch et {
-		case .boolean: return "b8";
-		case .i1: return "i8";
-		case .u1: return "u8";
-		case .i2: return "i16";
-		case .u2: return "u16";
-		case .i4: return "i32";
-		case .u4: return "u32";
-		case .i8: return "i64";
-		case .u8: return "u64";
-		case .r4: return "f32";
-		case .r8: return "f64";
-		case .u: return "size_t";
-		case .i: return "intptr_t";
-		case .valueType: assert(false); return "error!";
-		case: assert(false); return "error!";
+	case .boolean: return "bool";
+	case .i1:      return "i8";
+	case .u1:      return "u8";
+	case .i2:      return "i16";
+	case .u2:      return "u16";
+	case .i4:      return "i32";
+	case .u4:      return "u32";
+	case .i8:      return "i64";
+	case .u8:      return "u64";
+	case .r4:      return "f32";
+	case .r8:      return "f64";
+	case .u:       return "size_t";
+	case .i:       return "intptr_t";
+	case: fallthrough;
+	case .valueType:
+		panic("error!");
 	}
+	return "error!";
 }
 
 CustomMod_Sig :: struct {
-	element_type : Element_Type
+	element_type: Element_Type,
 }
 
-read_custom_mods :: proc( cursor: ^[]byte ) -> []CustomMod_Sig {
+read_custom_mods :: proc(cursor: ^[]byte) -> []CustomMod_Sig {
 	res: [dynamic]CustomMod_Sig;
-	element_type, _ := peek_compressed( Element_Type, cursor^ );
-	assert( element_type!=Element_Type.cModOpt );
-	assert( element_type!=Element_Type.cModReqd );
+	element_type, _ := peek_compressed(Element_Type, cursor^);
+	assert(element_type != Element_Type.cModOpt);
+	assert(element_type != Element_Type.cModReqd);
 	return res[:];
 }
 
-field_sig_read :: proc( db: ^Database, cursor: ^[]byte ) -> Field_Sig {
+field_sig_read :: proc(db: ^Database, cursor: ^[]byte) -> Field_Sig {
 	res := Field_Sig{};
-	res.call_conv = read_data( Calling_Convention, cursor );
-	assert( res.call_conv==.Field );
-	res.custommod_sig = read_custom_mods( cursor );
-	res.type_sig = read_type_sig( db, cursor );
+	res.call_conv = read_data(Calling_Convention, cursor);
+	assert(res.call_conv == .Field);
+	res.custommod_sig = read_custom_mods(cursor);
+	res.type_sig = read_type_sig(db, cursor);
 	return res;
 }
 
 Param_Sig :: struct {
 	custommod_sigs: []CustomMod_Sig,
 	is_by_ref: bool,
-	type_sig: Type_Sig
+	type_sig: Type_Sig,
 }
 
-param_sig_read :: proc( db: ^Database, cursor: ^[]byte ) -> (res: Param_Sig) {
-	res.custommod_sigs = read_custom_mods( cursor );
-	res.is_by_ref = read_compressed_cond( Element_Type, cursor, Element_Type.byRef );
-	res.type_sig = read_type_sig( db, cursor );
+param_sig_read :: proc(db: ^Database, cursor: ^[]byte) -> (res: Param_Sig) {
+	res.custommod_sigs = read_custom_mods(cursor);
+	res.is_by_ref = read_compressed_cond(Element_Type, cursor, Element_Type.byRef);
+	res.type_sig = read_type_sig(db, cursor);
 	return;
 }
 
@@ -894,18 +896,18 @@ RetType_Sig :: struct {
 	custommod_sigs: []CustomMod_Sig,
 	is_by_ref: bool,
 	is_void: bool,
-	type_sig: Type_Sig
+	type_sig: Type_Sig,
 }
 
-rettype_sig_read :: proc( db: ^Database, cursor: ^[]byte ) -> RetType_Sig {
+rettype_sig_read :: proc(db: ^Database, cursor: ^[]byte) -> RetType_Sig {
 	res := RetType_Sig{};
-	res.custommod_sigs = read_custom_mods( cursor );
-	res.is_by_ref = read_compressed_cond( Element_Type, cursor, Element_Type.byRef );
-	res.is_void = read_compressed_cond( Element_Type, cursor, Element_Type.void_ );
-	if res.is_void==false {
-		res.type_sig = read_type_sig( db, cursor );
+	res.custommod_sigs = read_custom_mods(cursor);
+	res.is_by_ref = read_compressed_cond(Element_Type, cursor, Element_Type.byRef);
+	res.is_void = read_compressed_cond(Element_Type, cursor, Element_Type.void_);
+	if res.is_void == false {
+		res.type_sig = read_type_sig(db, cursor);
 	}
-	
+
 	return res;
 }
 
@@ -913,19 +915,19 @@ MethodDef_Sig :: struct {
 	call_conv: Calling_Convention,
 	generic_param_count: u32,
 	rettype_sig: RetType_Sig,
-	params: []Param_Sig
+	params: []Param_Sig,
 }
 
-methoddef_sig_read :: proc( db: ^Database, cursor: ^[]byte ) -> MethodDef_Sig {
+methoddef_sig_read :: proc(db: ^Database, cursor: ^[]byte) -> MethodDef_Sig {
 	res := MethodDef_Sig{};
-	res.call_conv = read_compressed( Calling_Convention, cursor );
-	assert( res.call_conv!=.Generic );
-	params_length := read_compressed( u32, cursor );
-	res.rettype_sig = rettype_sig_read( db, cursor );
+	res.call_conv = read_compressed(Calling_Convention, cursor);
+	assert(res.call_conv != .Generic);
+	params_length := read_compressed(u32, cursor);
+	res.rettype_sig = rettype_sig_read(db, cursor);
 	params: [dynamic]Param_Sig;
-	for i:u32=0; i<params_length; i+=1 {
-		ps := param_sig_read( db, cursor );
-		append( &params, ps );
+	for i in 0..<params_length {
+		ps := param_sig_read(db, cursor);
+		append(&params, ps);
 	}
 	res.params = params[:];
 	return res;
@@ -934,12 +936,12 @@ methoddef_sig_read :: proc( db: ^Database, cursor: ^[]byte ) -> MethodDef_Sig {
 Type_Def_Or_Ref :: struct {
 	type: u32,	// TODO: enum?
 	index: u32,
-	valid: bool
+	valid: bool,
 }
 
-read_compressed_type_def_or_ref :: proc( cursor: ^[]byte ) -> Type_Def_Or_Ref {
+read_compressed_type_def_or_ref :: proc(cursor: ^[]byte) -> Type_Def_Or_Ref {
 	res := Type_Def_Or_Ref{};
-	val := read_compressed( u32, cursor );
+	val := read_compressed(u32, cursor);
 	if val != 0 {
 		res.type = (val & ((1 << 2) - 1));
 		res.index = (val>>2)-1;
@@ -948,9 +950,9 @@ read_compressed_type_def_or_ref :: proc( cursor: ^[]byte ) -> Type_Def_Or_Ref {
 	return res;
 }
 
-type_def_or_ref_from_table :: proc ( t: ^Table, row, column: u32 ) -> Type_Def_Or_Ref {
+type_def_or_ref_from_table :: proc (t: ^Table, row, column: u32) -> Type_Def_Or_Ref {
 	res := Type_Def_Or_Ref{};
-	val := table_get_value( t, u32, row, column );
+	val := table_get_value(t, u32, row, column);
 	if val != 0 {
 		res.type = (val & ((1 << 2) - 1));
 		res.index = (val>>2)-1;
@@ -959,11 +961,10 @@ type_def_or_ref_from_table :: proc ( t: ^Table, row, column: u32 ) -> Type_Def_O
 	return res;
 }
 
-base_type_get :: proc( db: ^Database, idx: Type_Def_Or_Ref ) -> Base_Type {
-	res : Base_Type;
+base_type_get :: proc(db: ^Database, idx: Type_Def_Or_Ref) -> (res: Base_Type) {
 	if idx.valid {
-		assert( idx.type==0 || idx.type==1 );
-		if idx.type==1 {
+		assert(idx.type == 0 || idx.type == 1);
+		if idx.type == 1 {
 			res.name,_ = table_get_string(db, &db.type_ref, idx.index, 1);
 			res.namespace,_ = table_get_string(db, &db.type_ref, idx.index, 2);
 		} else {
@@ -971,22 +972,53 @@ base_type_get :: proc( db: ^Database, idx: Type_Def_Or_Ref ) -> Base_Type {
 			res.namespace ,_= table_get_string(db, &db.type_def, idx.index, TYPEDEF_NAMESPACE_COLUMN);
 		}
 	}
-	return res;
+	return;
 }
+
+Field_Attribute_CompilerControlled :: 0x0000;
+Field_Attribute_Private            :: 0x0001;
+Field_Attribute_FamANDAssem        :: 0x0002;
+Field_Attribute_Assem              :: 0x0003;
+Field_Attribute_Family             :: 0x0004;
+Field_Attribute_FamORAssem         :: 0x0005;
+Field_Attribute_Public             :: 0x0006;
+
+Field_Attribute_UnmanagedExport    :: 0x0008;
+
+Field_Attribute_Static             :: 0x0010;
+Field_Attribute_Final              :: 0x0020;
+Field_Attribute_Virtual            :: 0x0040;
+Field_Attribute_HideBySig          :: 0x0080;
+Field_Attribute_VtableLayoutMask   :: 0x0100;
+Field_Attribute_Strict             :: 0x0200;
+Field_Attribute_Abstract           :: 0x0400;
+Field_Attribute_SpecialName        :: 0x0800;
+Field_Attribute_PInvokedImpl       :: 0x2000;
+Field_Attribute_RTSpecialName      :: 0x1000;
+Field_Attribute_HasSecurity        :: 0x4000;
+Field_Attribute_RequireSecObject   :: 0x8000;
+
+
+Field_Attribute_Req_Static_Virtual_Public :: \
+	Field_Attribute_RequireSecObject |
+	Field_Attribute_Virtual |
+	Field_Attribute_Static |
+	Field_Attribute_Public;
+
 
 // Field row
 Field_Row :: struct {
 	attr: u32,
+	sig:  u32,
 	name: string,
-	sig: u32,
 }
 
-field_row_get :: proc(db: ^Database, row_idx: u32) -> (res:Field_Row) {
-	
+field_row_get :: proc(db: ^Database, row_idx: u32) -> (res: Field_Row) {
+
 	FIELD_ATTR_COLUMN :: 0;
 	FIELD_NAME_COLUMN :: 1;
 	FIELD_SIG_COLUMN :: 2;
-	
+
 	res.attr = table_get_value(&db.field, u32, row_idx, FIELD_ATTR_COLUMN);
 	res.name, _ = table_get_string(db, &db.field, row_idx, FIELD_NAME_COLUMN);
 	res.sig = table_get_value(&db.field, u32, row_idx, FIELD_SIG_COLUMN);
@@ -998,14 +1030,14 @@ Methoddef_Row :: struct {
 	rva: u32,
 	name: string,
 	sig_blob: []byte,
-	param_start_idx: u32
+	param_start_idx: u32,
 }
 
-methoddef_row_get :: proc(db: ^Database, row_idx: u32) -> (res:Methoddef_Row) {
-	METHOD_RVA_COLUMN :: 0;
-	METHOD_NAME_COLUMN :: 3;
+methoddef_row_get :: proc(db: ^Database, row_idx: u32) -> (res: Methoddef_Row) {
+	METHOD_RVA_COLUMN       :: 0;
+	METHOD_NAME_COLUMN      :: 3;
 	METHOD_SIGNATURE_COLUMN :: 4;
-	METHOD_PARAM_COLUMN :: 5;
+	METHOD_PARAM_COLUMN     :: 5;
 
 	res.rva = table_get_value(&db.method_def, u32, row_idx, METHOD_RVA_COLUMN);
 	res.name, _ = table_get_string(db, &db.method_def, row_idx, METHOD_NAME_COLUMN);
@@ -1020,14 +1052,14 @@ Param_Row :: struct {
 	name: string,
 	attr: u16,
 	rank: u16,
-	row_idx: u32
+	row_idx: u32,
 }
 
 param_row_get :: proc(db: ^Database, row_idx: u32) -> (res:Param_Row) {
 	PARAM_ATTR_COLUMN :: 0;
 	PARAM_RANK_COLUMN :: 1;
 	PARAM_NAME_COLUMN :: 2;
-	
+
 	res.attr = table_get_value(&db.param, u16, row_idx, PARAM_ATTR_COLUMN);
 	res.name, _ = table_get_string(db, &db.param, row_idx, PARAM_NAME_COLUMN);
 	res.name = export_variable_name(res.name);
@@ -1044,17 +1076,17 @@ TYPEDEF_METHOD_COLUMN :: 5;
 
 // Type Def row
 Typedef_Row :: struct {
-	attr: u32,
-	name: string,
-	namespace: string,
-	field_start_idx: u32,
-	field_end_idx: u32,
+	name:             string,
+	namespace:        string,
+	attr:             u32,
+	field_start_idx:  u32,
+	field_end_idx:    u32,
 	method_start_idx: u32,
-	method_end_idx: u32,
-	row_idx: u32
+	method_end_idx:   u32,
+	row_idx:          u32,
 }
 
-typedef_row_get :: proc(db: ^Database, row_idx: u32) -> (res:Typedef_Row) {
+typedef_row_get :: proc(db: ^Database, row_idx: u32) -> (res: Typedef_Row) {
 	res.attr = table_get_value(&db.type_def, u32, row_idx, TYPEDEF_ATTR_COLUMN);
 	res.name, _ = table_get_string(db, &db.type_def, row_idx, TYPEDEF_NAME_COLUMN);
 	res.namespace, _ = table_get_string(db, &db.type_def, row_idx, TYPEDEF_NAMESPACE_COLUMN);
@@ -1067,110 +1099,114 @@ typedef_row_get :: proc(db: ^Database, row_idx: u32) -> (res:Typedef_Row) {
 	return;
 }
 
-composite_index_get :: inline proc(val: u32, $BITS: u32) -> (type, index: u32) {
+composite_index_get :: proc(val: u32, $BITS: u32) -> (type, index: u32) {
 	type = (val & ((1<<BITS) - 1));
 	index = (val>>BITS)-1;
 	return;
 }
 
-Custom_Attribute_Type :: enum {
+Custom_Attribute_Type :: enum u32 {
 	Method_Def = 2,
 	Member_Ref = 3
 }
 
-MemberRefParent_Enum :: enum {
-	Type_Def = 0,
-	Type_Ref = 1,
+MemberRefParent_Enum :: enum u32 {
+	Type_Def   = 0,
+	Type_Ref   = 1,
 	Module_Ref = 2,
 	Method_Def = 3,
-	Type_Spec = 4
+	Type_Spec  = 4,
 }
 MemberRefParent :: struct {
 	type: MemberRefParent_Enum,
-	index: u32
+	index: u32,
 }
 MEMBER_REF_PARENT_ENCODE_BITS :: 3;
 member_ref_parent_make :: proc(val: u32) -> MemberRefParent {
 	res := MemberRefParent{};
-	tmp : u32;
+	tmp: u32;
 	tmp, res.index = composite_index_get(val, MEMBER_REF_PARENT_ENCODE_BITS);
-	res.type = cast(MemberRefParent_Enum)tmp;
+	res.type = MemberRefParent_Enum(tmp);
 	return res;
 }
 
-Custom_Attribute :: enum {
+Custom_Attribute :: enum u32 {
 	Const,
-	NativeTypeInfo	
+	NativeTypeInfo,
+	ComOutPtr,
+	Obsolete,
 }
 
-Custom_Attribute_Set :: bit_set[Custom_Attribute];
+Custom_Attribute_Set :: bit_set[Custom_Attribute; u32];
 
 // TODO: move custom attributes to database
-Params_Custom_Attributes := make(map[u32]Custom_Attribute_Set);
-Fields_Custom_Attributes := make(map[u32]Custom_Attribute_Set);
+Custom_Attribute_Map :: map[u32]Custom_Attribute_Set;
+Params_Custom_Attributes := make(Custom_Attribute_Map);
+Fields_Custom_Attributes := make(Custom_Attribute_Map);
 
 
-param_promote_cstring :: proc(param_idx: u32, odin_type: string) -> string {
-	if odin_type=="^i8" {
-		ca, ok := Params_Custom_Attributes[param_idx];
-		if ok && .Const in ca && .NativeTypeInfo in ca {
+promote_cstring :: proc(attr_map: Custom_Attribute_Map, param_idx: u32, odin_type: string) -> string {
+	switch odin_type {
+	case "^u8", "^i8":
+		if s := attr_map[param_idx]; .Const in s && .NativeTypeInfo in s {
 			return "cstring";
+		}
+	case "^u16":
+		if s := attr_map[param_idx]; .Const in s && .NativeTypeInfo in s {
+			return "wstring";
 		}
 	}
 	return odin_type;
+}
+param_promote_cstring :: proc(param_idx: u32, odin_type: string) -> string {
+	return promote_cstring(Params_Custom_Attributes, param_idx, odin_type);
 }
 
 field_promote_cstring :: proc(param_idx: u32, odin_type: string) -> string {
-	if odin_type=="^i8" {
-		ca, ok := Fields_Custom_Attributes[param_idx];
-		if ok && .Const in ca && .NativeTypeInfo in ca {
-			return "cstring";
-		}
-	}
-	return odin_type;
+	return promote_cstring(Fields_Custom_Attributes, param_idx, odin_type);
 }
 
 parse_custom_attributes :: proc(db: ^Database) {
 	res := Custom_Attribute_Set{};
 	HAS_CUSTOM_ATTRIB_BIT_INDEX :: 5;
 	CUSTOM_ATTRIBUTE_TYPE_BIT_INDEX :: 3;
-	for i :u32=0; i<db.custom_attribute.row_count; i+=1 {
+	for i in 0..<db.custom_attribute.row_count {
 		parent_val := table_get_value(&db.custom_attribute, u32, i, 0);
 		parent_type, parent_idx := composite_index_get(parent_val, HAS_CUSTOM_ATTRIB_BIT_INDEX);
-		hca := cast(Has_Custom_Attribute)parent_type;
+		hca := Has_Custom_Attribute(parent_type);
 
-		dest_map : ^map[u32]Custom_Attribute_Set;
+		dest_map: ^Custom_Attribute_Map;
 		#partial switch hca {
-			case .field: dest_map = &Fields_Custom_Attributes;
-			case .param: dest_map = &Params_Custom_Attributes;
+		case .field: dest_map = &Fields_Custom_Attributes;
+		case .param: dest_map = &Params_Custom_Attributes;
 		}
-		if dest_map!=nil {
+		if dest_map != nil {
 			ctor_val := table_get_value(&db.custom_attribute, u32, i, 1);
+
 			ctor_type, ctor_idx := composite_index_get(ctor_val, CUSTOM_ATTRIBUTE_TYPE_BIT_INDEX);
-			//printf("Found param CA: %v ref: %v, name: %v, ctor %v %v", i, parent_idx, param_name, ctor_type, ctor_idx);
-			if ctor_type==cast(u32)Custom_Attribute_Type.Member_Ref {
+			if ctor_type == u32(Custom_Attribute_Type.Member_Ref) {
 				member_ref_parent_val := table_get_value(&db.member_ref, u32, ctor_idx, 0);
 				ctor_name, _ := table_get_string(db, &db.member_ref, ctor_idx, 1);
 				member_ref_parent := member_ref_parent_make(member_ref_parent_val);
-				if member_ref_parent.type==.Type_Ref {
+				if member_ref_parent.type == .Type_Ref {
 					type_ref_name, _ := table_get_string(db, &db.type_ref, member_ref_parent.index, 1);
 					attribs := dest_map[parent_idx];
 					switch type_ref_name {
-						case "ConstAttribute": incl(&attribs, Custom_Attribute.Const);
-						case "NativeTypeInfoAttribute": incl(&attribs, Custom_Attribute.NativeTypeInfo);
-						case: 
+					case "ConstAttribute":          attribs += {.Const};
+					case "NativeTypeInfoAttribute": attribs += {.NativeTypeInfo};
+					case "ComOutPtrAttribute":      attribs += {.ComOutPtr};
+					case "ObsoleteAttribute":       attribs += {.Obsolete};
 					}
 					dest_map[parent_idx] = attribs;
 				}
-				//printf("ctor name %v %v\n", ctor_name, member_ref_parent);
-			}	
+			}
 		}
 	}
 }
 
-// =========================
+// = == == == == == == == == == == == ==
 // Export functions
-// =========================
+// = == == == == == == == == == == == ==
 
 Export_Function_Type :: enum {
 	Global,
@@ -1178,61 +1214,72 @@ Export_Function_Type :: enum {
 	Delegate
 }
 
-export_function :: proc(db: ^Database, function_row_idx: u32, func_type: Export_Function_Type, parent_name: string) {
+export_function :: proc(db: ^Database, function_row_idx: u32, func_type: Export_Function_Type, parent_name: string, max_padding: int) {
 	function_row := methoddef_row_get(db, function_row_idx);
-	if func_type==.Delegate && function_row.name!="Invoke" { return; }
-	methoddef_sig := methoddef_sig_read( db, &function_row.sig_blob );
+	if func_type == .Delegate && function_row.name != "Invoke" {
+		return;
+	}
+	methoddef_sig := methoddef_sig_read(db, &function_row.sig_blob);
 
 	switch func_type {
-		case .Global: printf("\t%v :: proc(", function_row.name);
-		case .Interface: printf("\t%v : proc(", function_row.name);
-		case .Delegate: printf("%v :: proc \"std\" (", parent_name);
+		case .Global:
+			// NOTE(bill): "std" is not needed here because of the attribute on the foreign block
+			printf("\t%v :: proc(", function_row.name);
+		case .Delegate:
+			printf("%v :: proc \"std\" (", parent_name);
+		case .Interface:
+			printf("\t%v:", function_row.name);
+			print_padding(max_padding-len(function_row.name));
+			printf(" proc \"std\" (");
 	}
 	// params
-	has_return := methoddef_sig.rettype_sig.is_void==false;
+	has_return := methoddef_sig.rettype_sig.is_void == false;
 	param_count := len(methoddef_sig.params);
-	if has_return { param_count +=1 ;}
+	if has_return {
+		param_count += 1;
+	}
 	param_by_ranks := make([]Param_Row, param_count);
 	{
 		param_idx := function_row.param_start_idx;
-		for i:=0;i<param_count; i+=1 {
+		for i := 0; i<param_count; i += 1 {
 			p := param_row_get(db, param_idx);
 			// skip the return param
-			if p.rank>0 {
-				p.rank -= 1;	
+			if p.rank > 0 {
+				p.rank -= 1;
 				param_by_ranks[p.rank] = p;
 			}
 			param_idx += 1;
 		}
 	}
-	
+
 	need_comma := false;
-	if func_type==.Interface {
-		printf( "this: ^%v", parent_name );	
+	if func_type == .Interface {
+		printf("this: ^%v", parent_name);
 		need_comma = true;
 	}
 	for _, param_sig_idx in methoddef_sig.params {
 		if need_comma {
-			printf(", ");	
+			printf(", ");
 		}
+		need_comma = true;
+
 		param_sig := &methoddef_sig.params[param_sig_idx];
 		param_type_name := type_sig_to_odin(&param_sig.type_sig);
 		p := param_by_ranks[param_sig_idx];
 		param_type_name = param_promote_cstring(p.row_idx, param_type_name);
 		printf("%v: %v", p.name, param_type_name);
-		need_comma = true;
 	}
 
 	if has_return {
-		printf(") -> %v",  type_sig_to_odin(&methoddef_sig.rettype_sig.type_sig) );
+		printf(") -> %v",  type_sig_to_odin(&methoddef_sig.rettype_sig.type_sig));
 	} else {
-		printf(")" );
+		printf(")");
 	}
 
 	switch func_type {
-		case .Global: printf("---;");
-		case .Interface: printf(",");
-		case .Delegate: printf(";");
+	case .Global:    printf(" ---");
+	case .Interface: printf(",");
+	case .Delegate:  printf(";");
 	}
 	if DEBUG_OUTPUT {
 		printf("// methoddef_row_idx %v", function_row_idx);
@@ -1240,9 +1287,9 @@ export_function :: proc(db: ^Database, function_row_idx: u32, func_type: Export_
 	printf("\n");
 }
 
-find_typedef_from_typeref :: proc( db: ^Database, typeref_row_id: u32) -> (bool,u32) {
-	name, _ := table_get_string( db, &db.type_ref, typeref_row_id, 1 );
-	namespace, _ := table_get_string( db, &db.type_ref, typeref_row_id, 2 );
+find_typedef_from_typeref :: proc(db: ^Database, typeref_row_id: u32) -> (bool,u32) {
+	name, _ := table_get_string(db, &db.type_ref, typeref_row_id, 1);
+	namespace, _ := table_get_string(db, &db.type_ref, typeref_row_id, 2);
 	fullname := strings.concatenate({namespace, ".", name}, context.temp_allocator);
 	elem, ok := db.typedef_map_pername[fullname];
 	return ok, elem;
@@ -1252,9 +1299,9 @@ find_interface_impl :: proc(db: ^Database, class: u32) -> (bool,Type_Def_Or_Ref)
 	INTERFACE_CLASS_COLUMN :: 0;
 	INTERFACE_INTERFACE_COLUMN :: 1;
 	for i in 0..db.interface_impl.row_count {
-		parent_val := cast(u32)table_get_value( &db.interface_impl, u16, i, INTERFACE_CLASS_COLUMN );
-		if parent_val==class {
-			return true, type_def_or_ref_from_table( &db.interface_impl, i, INTERFACE_INTERFACE_COLUMN );
+		parent_val := cast(u32)table_get_value(&db.interface_impl, u16, i, INTERFACE_CLASS_COLUMN);
+		if parent_val == class {
+			return true, type_def_or_ref_from_table(&db.interface_impl, i, INTERFACE_INTERFACE_COLUMN);
 		}
 	}
 	return false, Type_Def_Or_Ref{};
@@ -1264,30 +1311,30 @@ export_interface_parent_methods :: proc(db: ^Database, typedef_row_idx: u32, int
 	has_parent_interface, parent_type_def_or_ref := find_interface_impl(db, typedef_row_idx+1);
 	if has_parent_interface == false { return; }
 
-	assert(parent_type_def_or_ref.type==1);
+	assert(parent_type_def_or_ref.type == 1);
 	// TODO: check resolution scope?
-	found, parent_type_def_idx :=find_typedef_from_typeref(db, parent_type_def_or_ref.index);
-	assert( found );
+	found, parent_type_def_idx := find_typedef_from_typeref(db, parent_type_def_or_ref.index);
+	assert(found);
 	// recursive fonction
 	export_interface_parent_methods(db, parent_type_def_idx, interface_name);
 
 	export_typedef_functions(db, parent_type_def_idx, .Interface, interface_name);
-	printf( "\n" );
+	printf("\n");
 }
 
 export_interface :: proc(db: ^Database, typedef_row_idx: u32) {
 	interface_row := typedef_row_get(db, typedef_row_idx);
 
-	// if interface_name!="ID3D11Resource" {
+	// if interface_name != "ID3D11Resource" {
 	// 	return;//interface_name="ID3D11Resource";
 	// }
 
 	println(interface_row.name, ":: struct {");
-	printf( "\tusing vtbl: ^%v_Vtbl,\n", interface_row.name);
+	printf("\tusing vtbl: ^%v_Vtbl,\n", interface_row.name);
 	println("}");
 	println("");
 
-	printf( "%v_Vtbl", interface_row.name);
+	printf("%v_Vtbl", interface_row.name);
 	println(" :: struct {");
 	export_interface_parent_methods(db, typedef_row_idx, interface_row.name);
 
@@ -1299,38 +1346,38 @@ export_interface :: proc(db: ^Database, typedef_row_idx: u32) {
 export_field_val :: proc(db: ^Database, field_owner_idx: u32) -> string {
 	// TODO: check enum is u32
 	t := &db.constant;
-	row_idx : u32 = 0;
-	for {
+
+	for row_idx in 0 ..< t.row_count {
 		parent_val := table_get_value(t, u32, row_idx, 1);
 		parent_idx := (parent_val>>2)-1;
-		
-		if parent_idx==field_owner_idx {
+
+		if parent_idx == field_owner_idx {
 			// TODO: to clean
 			et := Element_Type(table_get_value(t, u32, row_idx, 0));
 			blob_idx := table_get_value(t, u32, row_idx, 2);
-			if et==.string {
+			if et == .string {
 				len := int(db.blobs[blob_idx]);
 				blob_idx += 1;
 				builder := strings.make_builder();
 				strings.write_string(&builder, "\"");
-				for i:=0; i<len; i+=2 {
-					b := cast(byte)db.blobs[u32(i)+blob_idx];
-					if b==0 { break; }
+				for i := 0; i < len; i += 2 {
+					b := db.blobs[u32(i)+blob_idx];
+					if b == 0 {
+						break;
+					}
 					strings.write_byte(&builder, b);
 				}
 				strings.write_string(&builder, "\"");
 				return strings.to_string(builder);
 			} else {
-				a : u32 = cast(u32)db.blobs[blob_idx+1];
-				b : u32 = cast(u32)db.blobs[blob_idx+2];
-				c : u32 = cast(u32)db.blobs[blob_idx+3];
+				a := u32(db.blobs[blob_idx+1]);
+				b := u32(db.blobs[blob_idx+2]);
+				c := u32(db.blobs[blob_idx+3]);
 				return fmt.aprintf("%d", a | (b<<8) | (c<<8));
 			}
 
 
 		}
-		row_idx += 1;
-		if row_idx>=t.row_count { break; }
 	}
 	return "";
 }
@@ -1340,27 +1387,58 @@ Export_Field_Type :: enum {
 	Enum
 }
 
+print_padding :: proc(space_count: int) {
+	for i in 0..<space_count {
+		print_to_buffer(" ");
+	}
+}
+
 export_typedef_fields :: proc(db: ^Database, typedef_row_idx: u32, field_type: Export_Field_Type) {
 	typedef_row := typedef_row_get(db, typedef_row_idx);
-	field_idx := typedef_row.field_start_idx;
-	if field_type==.Enum {
-		println(typedef_row.name, ":: enum {");
-		field_idx += 1; // not sure...
-	}
-	for {
-		field_row := field_row_get(db, field_idx);
-		if field_row.attr != 32854 { // TODO: clean
-			break;
+	if field_type == .Enum {
+		println(typedef_row.name, ":: enum c.int {");
+		defer println("}");
+
+		max_padding := 0;
+		for i in typedef_row.field_start_idx ..< typedef_row.field_end_idx {
+			field_row := field_row_get(db, i);
+			if field_row.attr != Field_Attribute_Req_Static_Virtual_Public {
+				continue;
+			}
+			max_padding = max(max_padding, len(field_row.name));
 		}
-		field_val := export_field_val(db, field_idx);
-		switch field_type {
-			case .Enum: printf("\t%v = %v,\n", field_row.name, field_val);
-			case .Global: printf("%v :: %v;\n", field_row.name, field_val);
+
+		for i in typedef_row.field_start_idx ..< typedef_row.field_end_idx  {
+			field_row := field_row_get(db, i);
+			if field_row.attr != Field_Attribute_Req_Static_Virtual_Public {
+				continue;
+			}
+			field_val := export_field_val(db, i);
+			print_to_buffer("\t");
+			print_to_buffer(field_row.name);
+			print_padding(max_padding - len(field_row.name));
+			print_to_buffer(" = ");
+			print_to_buffer(field_val);
+			print_to_buffer(",\n");
 		}
-		field_idx += 1;
-	}
-	if field_type==.Enum {
-		println("}");
+
+	} else {
+		for i in typedef_row.field_start_idx ..< typedef_row.field_end_idx {
+			field_row := field_row_get(db, i);
+			if field_row.attr != Field_Attribute_Req_Static_Virtual_Public {
+				break;
+			}
+			field_val: string;
+			switch field_row.name {
+			case "TRUE":
+				field_val = "true";
+			case "FALSE":
+				field_val = "false";
+			case:
+				field_val = export_field_val(db, i);
+			}
+			printf("%v :: %v;\n", field_row.name, field_val);
+		}
 	}
 }
 
@@ -1368,59 +1446,85 @@ export_typedef_functions :: proc(db: ^Database, typedef_row_idx: u32, func_type:
 	typedef_row := typedef_row_get(db, typedef_row_idx);
 
 	if DEBUG_OUTPUT {
-		printf( "\t// typedef:%v row:%v field:%v method:%v\n", typedef_row.name, typedef_row_idx, typedef_row.field_start_idx, typedef_row.method_start_idx);
+		printf("\t// typedef:%v row:%v field:%v method:%v\n", typedef_row.name, typedef_row_idx, typedef_row.field_start_idx, typedef_row.method_start_idx);
 	}
 
-	if func_type==.Interface {
-		printf( "\t//  %v\n", typedef_row.name );
+	if func_type == .Interface {
+		printf("\t// %v\n", typedef_row.name);
 	}
 
-	method_idx := typedef_row.method_start_idx;
-	for {
-		if method_idx>=typedef_row.method_end_idx {
+	max_padding := 0;
+	for method_idx := typedef_row.method_start_idx; ; method_idx += 1 {
+		if method_idx >= typedef_row.method_end_idx {
 			break;
 		}
 		method_row := methoddef_row_get(db, method_idx);
-		export_function(db, method_idx, func_type, len(parent_name)==0?typedef_row.name:parent_name);
-		method_idx += 1;
+		function_row := methoddef_row_get(db, method_idx);
+		if func_type == .Delegate && function_row.name != "Invoke" {
+			continue;
+		}
+		max_padding = max(max_padding, len(function_row.name));
+	}
+
+
+	for method_idx := typedef_row.method_start_idx; ; method_idx += 1 {
+		if method_idx >= typedef_row.method_end_idx {
+			break;
+		}
+		method_row := methoddef_row_get(db, method_idx);
+		export_function(db, method_idx, func_type, len(parent_name) == 0 ? typedef_row.name: parent_name, max_padding);
 	}
 }
 
 print_tab :: proc(count: int) {
-	for i in 0.. count {
+	for i in 0 .. count {
 		printf("\t");
 	}
 }
 
 export_variable_uid := 0;
-export_variable_name :: proc(name: string) -> string {
-	switch(name) {
-		case "in": return "in_";
-		case "defer": return "defer_";
-		case "proc": return "proc_";
-		case "context": return "context_";
-		case "_bitfield": 
-			export_variable_uid += 1;
-			return fmt.aprintf("_bitfield_%v", export_variable_uid);
-
-		case: return name;
+export_variable_name :: proc(name: string, allocator := context.allocator) -> string {
+	switch name {
+	case "in":      return "in_";
+	case "defer":   return "defer_";
+	case "proc":    return "proc_";
+	case "context": return "context_";
+	case "_bitfield":
+		context.allocator = allocator;
+		export_variable_uid += 1;
+		return fmt.aprintf("_bitfield_%v", export_variable_uid);
 	}
+	return name;
 }
 
-export_struct_members :: proc(db: ^Database, tab: int, struct_idx: u32) -> u32 {
+export_struct_members :: proc(db: ^Database, tab: int, struct_idx: u32) -> (union_idx: u32) {
 	struct_row := typedef_row_get(db, struct_idx);
-	union_idx : u32 = 0;
 	member_row_idx := struct_row.field_start_idx;
-	for {
-		member := field_row_get(db, member_row_idx);
-		if member.attr!=6 || member_row_idx>=struct_row.field_end_idx {
+	max_padding := 0;
+
+	// Calculate padding
+	prev_export_variable_uid := export_variable_uid;
+	for i := member_row_idx; ; i += 1 {
+		member := field_row_get(db, i);
+		if member.attr != Field_Attribute_Public || i >= struct_row.field_end_idx {
 			break;
 		}
-		
+		context.allocator = context.temp_allocator;
+		n := export_variable_name(member.name);
+		max_padding = max(max_padding, len(n));
+	}
+	export_variable_uid = prev_export_variable_uid;
+
+	for i := member_row_idx; ; i += 1 {
+		member := field_row_get(db, i);
+		if member.attr != Field_Attribute_Public || i >= struct_row.field_end_idx {
+			break;
+		}
+
 		blob_data := db.blobs[member.sig+1:];
-		field_sig := field_sig_read( db, &blob_data );
+		field_sig := field_sig_read(db, &blob_data);
 		odin_type := type_sig_to_odin(&field_sig.type_sig);
-		odin_type = field_promote_cstring(member_row_idx, odin_type);
+		odin_type = field_promote_cstring(i, odin_type);
 
 		// union detection, not very clean...
 		is_anonymous := strings.has_prefix(odin_type, "_Anonymous");
@@ -1429,7 +1533,7 @@ export_struct_members :: proc(db: ^Database, tab: int, struct_idx: u32) -> u32 {
 		if is_anonymous || is_struct || is_union {
 			if DEBUG_OUTPUT {
 				print_tab(tab);
-				printf("// anonymous union field %v referencing typedef %v\n", member_row_idx, union_idx);
+				printf("// anonymous union field %v referencing typedef %v\n", i, union_idx);
 			}
 			print_tab(tab);
 			if is_anonymous {
@@ -1441,7 +1545,7 @@ export_struct_members :: proc(db: ^Database, tab: int, struct_idx: u32) -> u32 {
 				printf("#raw_union ");
 			}
 			println("{");
-			
+
 			union_idx += export_struct_members(db, tab+1, union_idx+struct_idx+1);
 			print_tab(tab);
 			println("},");
@@ -1449,16 +1553,17 @@ export_struct_members :: proc(db: ^Database, tab: int, struct_idx: u32) -> u32 {
 		} else {
 			if DEBUG_OUTPUT {
 				print_tab(tab);
-				printf("// field row: %v\n", member_row_idx);
+				printf("// field row: %v\n", i);
 			}
 			print_tab(tab);
-			printf("%v : %v,\n", export_variable_name(member.name), odin_type);
+			vname := export_variable_name(member.name);
+			printf("%v: ", vname);
+			print_padding(max_padding - len(vname));
+			printf("%v,\n", odin_type);
 		}
-
-		member_row_idx += 1;
 	}
 
-	return union_idx;
+	return;
 }
 
 export_struct :: proc(db: ^Database, struct_idx: u32) {
@@ -1466,6 +1571,31 @@ export_struct :: proc(db: ^Database, struct_idx: u32) {
 	if DEBUG_OUTPUT {
 		printf("// typedef row: %v attr: %v\n", struct_idx, struct_row.attr);
 	}
+
+	if struct_row.field_start_idx+1 == struct_row.field_end_idx {
+		member := field_row_get(db, struct_row.field_start_idx);
+		if member.name == "Value" {
+			odin_type: string;
+
+			switch struct_row.name {
+			case "BOOL":
+				odin_type = "b32";
+			case:
+				blob_data := db.blobs[member.sig+1:];
+				field_sig := field_sig_read(db, &blob_data);
+				odin_type = type_sig_to_odin(&field_sig.type_sig);
+				odin_type = field_promote_cstring(struct_row.field_start_idx, odin_type);
+			}
+
+			if struct_row.name[0] == 'H' && odin_type == "intptr_t" {
+				odin_type = "rawptr";
+			}
+
+			printf("%s :: distinct %s;\n", struct_row.name, odin_type);
+			return;
+		}
+	}
+
 	println(struct_row.name, ":: struct {");
 	export_struct_members(db, 0, struct_idx);
 	println("}\n");
@@ -1478,7 +1608,7 @@ USE_OUTPUT_BUFFER :: true;
 
 when USE_OUTPUT_BUFFER {
 	OUTPUT_BUFFER_SIZE :: 16*1024;
-	output_buffer_data : [OUTPUT_BUFFER_SIZE]byte;
+	output_buffer_data: [OUTPUT_BUFFER_SIZE]byte;
 	output_buffer_cursor := 0;
 
 	output_buffer_flush :: proc() {
@@ -1493,20 +1623,17 @@ when USE_OUTPUT_BUFFER {
 			output_buffer_flush();
 		}
 	}
-	println :: inline proc(args: ..any) { print_to_buffer(fmt.tprintln(..args)); }
-	printf  :: inline proc(format: string, args: ..any) { print_to_buffer(fmt.tprintf(format,..args)); }
-}
-else {
-	println :: inline proc(args: ..any) -> int { return fmt.println(..args); }
-	printf  :: inline proc(format: string, args: ..any) -> int { return fmt.printf(format, ..args); }
+	println :: proc(args: ..any) { print_to_buffer(fmt.tprintln(..args)); }
+	printf  :: proc(format: string, args: ..any) { print_to_buffer(fmt.tprintf(format,..args)); }
+} else {
+	println :: proc(args: ..any) -> int { return fmt.println(..args); }
+	printf  :: proc(format: string, args: ..any) -> int { return fmt.printf(format, ..args); }
 }
 
 //println :: proc(args: ..any) -> int { return 0; }
 //printf  :: proc(format: string, args: ..any) -> int { return 0; }
 
 main :: proc() {
-
-
 	path := "Windows.Win32.winmd";
 	data, data_ok := os.read_entire_file(path);
 	if !data_ok {
@@ -1519,23 +1646,72 @@ main :: proc() {
 
 	skip_global_functions := false;
 	for arg in os.args {
-		if arg=="-skip_global_functions" {
+		if arg == "-skip_global_functions" {
 			skip_global_functions = true;
 		}
 	}
 
-	target_namespace := "Windows.Win32.Direct3D11";
-	if len(os.args)>1 {
+
+	// target_namespace := "Windows.Win32.Direct3D11";
+	// lib_name := "xinput";
+	target_namespace := "Windows.Win32.Base";
+	// target_namespace := "Windows.Win32.Debug";
+	lib_name := "???";
+
+	if len(os.args) > 1 {
 		target_namespace = os.args[1];
 	}
 
-	lib_name := "xinput";
-	if len(os.args)>2 {
+	if len(os.args) > 2 {
 		lib_name = os.args[2];
 	}
-	package_name := "win32_winmd";
+	package_name := "sys_windows";
 
-	assert( size_of(b32)==size_of(win32.BOOL) );
+	assert(size_of(b32) == size_of(win32.BOOL));
+
+	parse_custom_attributes(db);
+
+	namespaces_map: map[string]bool;
+
+	enums:      [dynamic]u32;
+	structs:    [dynamic]u32;
+	interfaces: [dynamic]u32;
+	delegates:  [dynamic]u32;
+	globals:    [dynamic]u32;
+	for row_idx in 0..<db.type_def.row_count {
+		// filter namespace
+		typedef_row := typedef_row_get(db, row_idx);
+
+		fullname := strings.concatenate({typedef_row.namespace, ".", typedef_row.name});
+		db.typedef_map_pername[fullname] = row_idx;
+
+		namespaces_map[typedef_row.namespace] = true;
+		if typedef_row.namespace != target_namespace {
+			continue;
+		}
+
+		base_type := base_type_get(db, type_def_or_ref_from_table(&db.type_def, row_idx, 3));
+
+		is_global    := typedef_row.name == "Apis"            && base_type.namespace == "System" && base_type.name == "Object";
+		is_enum      := base_type.name == "Enum"              && base_type.namespace == "System";
+		is_struct    := base_type.name == "ValueType"         && base_type.namespace == "System";
+		is_interface := base_type.name == ""                  && base_type.namespace == "";
+		is_delegate  := base_type.name == "MulticastDelegate" && base_type.namespace == "System";
+
+		switch {
+		case is_enum:
+			append(&enums, row_idx);
+		case is_global:
+			append(&globals, row_idx);
+		case is_interface:
+			append(&interfaces, row_idx);
+		case is_struct:
+			append(&structs, row_idx);
+		case is_delegate:
+			append(&delegates, row_idx);
+		}
+	}
+
 	println("package", package_name);
 
 	if DEBUG_OUTPUT {
@@ -1560,86 +1736,48 @@ main :: proc() {
 		println("*/");
 	}
 
-	parse_custom_attributes(db);
-	
-	enums : [dynamic]u32;
-	structs : [dynamic]u32;
-	interfaces : [dynamic]u32;
-	delegates : [dynamic]u32;
-	globals : [dynamic]u32;
-	{
-		row_idx : u32 = 0;
-		for ; row_idx<db.type_def.row_count; row_idx+=1 {
 
-			// filter namespace
-			typedef_row := typedef_row_get(db, row_idx);
+	printf("\nimport \"core:c\"\n");
 
-			fullname := strings.concatenate( {typedef_row.namespace, ".", typedef_row.name});
-			db.typedef_map_pername[fullname] = row_idx;
-
-			if strings.compare(typedef_row.namespace, target_namespace) !=0 {
-				continue;
-			}
-
-			base_type := base_type_get(db, type_def_or_ref_from_table(&db.type_def, row_idx, 3));
-		
-			is_global := typedef_row.name == "Apis" && base_type.name=="Object" && base_type.namespace=="System";
-			is_enum := base_type.name=="Enum" && base_type.namespace=="System";
-			is_struct := base_type.name=="ValueType" && base_type.namespace=="System";
-			is_interface := base_type.name=="" && base_type.namespace=="";
-			is_delegate := base_type.name=="MulticastDelegate" && base_type.namespace=="System";
-
-			if is_enum {
-				append(&enums, row_idx);
-			} else if is_global {
-				append(&globals, row_idx);
-			} else if is_interface {
-				append(&interfaces, row_idx);
-			} else if is_struct {
-				append(&structs, row_idx);
-			} else if is_delegate {
-				append(&delegates, row_idx);
-			}
-		}
-	}
-	if len(globals)>0 {
+	if len(globals) > 0 {
+		printf("\nforeign import %s \"system:%s.lib\"\n", lib_name, lib_name);
 		println("\n// Globals");
 		for idx in globals {
 			export_typedef_fields(db, idx, .Global);
 		}
 	}
-	if len(enums)>0 {
+	if len(enums) > 0 {
 		println("\n// Enums");
 		for idx in enums {
 			export_typedef_fields(db, idx, .Enum);
 		}
 	}
-	if len(structs)>0 {
+	if len(structs) > 0 {
 		println("\n// Structs");
 		for idx in structs {
 			export_struct(db, idx);
 		}
 	}
-	if len(delegates)>0 {
+	if len(delegates) > 0 {
 		println("\n// Delegates");
 		for idx in delegates {
 			export_typedef_functions(db, idx, .Delegate);
 		}
 	}
-	if len(interfaces)>0 {
+	if len(interfaces) > 0 {
 		println("\n// Interfaces");
 		for idx in interfaces {
 			export_interface(db, idx);
 		}
 	}
-	if len(globals)>0 {
+	if len(globals) > 0 {
 		println("\n// Global Functions");
 		if skip_global_functions {
 			println("/* SKIPPED");
 		}
-		printf("foreign import %s \"system:%s.lib\"\n", lib_name, lib_name);
 		println("@(default_calling_convention = \"std\")");
 		println("foreign", lib_name, "{");
+
 		for idx in globals {
 			export_typedef_functions(db, idx, .Global);
 		}
